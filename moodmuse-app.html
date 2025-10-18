@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MoodMuse - Tune Into Your Emotion</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0e0e0e;
+            color: #e0e0e0;
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background 0.8s ease;
+        }
+
+        .gradient-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.3;
+            transition: background 1s ease;
+            background: linear-gradient(135deg, #1a1a1a 0%, #0e0e0e 100%);
+        }
+
+        header {
+            text-align: center;
+            padding: 2rem 1rem;
+            background: rgba(18, 18, 18, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 300;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, #fff, #999);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .tagline {
+            font-size: 1rem;
+            color: #888;
+            font-weight: 300;
+        }
+
+        nav {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            padding: 1rem;
+            background: rgba(18, 18, 18, 0.6);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        nav button {
+            background: transparent;
+            border: none;
+            color: #999;
+            font-size: 0.95rem;
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        nav button:hover {
+            color: #fff;
+        }
+
+        nav button.active {
+            color: #fff;
+        }
+
+        nav button.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #fff, transparent);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .mood-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .mood-card {
+            background: rgba(30, 30, 30, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mood-card::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1), transparent);
+            transform: translate(-50%, -50%);
+            transition: all 0.6s ease;
+        }
+
+        .mood-card:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .mood-card:hover {
+            transform: translateY(-10px);
+            border-color: currentColor;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .mood-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            filter: grayscale(0.3);
+            transition: all 0.3s ease;
+        }
+
+        .mood-card:hover .mood-icon {
+            filter: grayscale(0);
+            transform: scale(1.1);
+        }
+
+        .mood-name {
+            font-size: 1.5rem;
+            font-weight: 300;
+            margin-bottom: 0.5rem;
+        }
+
+        .mood-description {
+            font-size: 0.9rem;
+            color: #888;
+        }
+
+        .mood-display {
+            text-align: center;
+            padding: 3rem 1rem;
+        }
+
+        .quote-box {
+            background: rgba(30, 30, 30, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 3rem;
+            margin: 2rem auto;
+            max-width: 800px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .quote-text {
+            font-size: 1.8rem;
+            font-weight: 300;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+            font-style: italic;
+        }
+
+        .quote-author {
+            font-size: 1rem;
+            color: #999;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        button.btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 0.8rem 2rem;
+            border-radius: 50px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        button.btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .playlist-section {
+            margin-top: 3rem;
+            text-align: center;
+        }
+
+        .playlist-section h3 {
+            font-size: 1.5rem;
+            font-weight: 300;
+            margin-bottom: 1.5rem;
+        }
+
+        .playlist-links {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .playlist-link {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 1rem 2rem;
+            border-radius: 15px;
+            color: #fff;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .playlist-link:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-3px);
+        }
+
+        .about-content, .settings-content {
+            max-width: 800px;
+            margin: 2rem auto;
+            line-height: 1.8;
+        }
+
+        .about-content h2, .settings-content h2 {
+            font-size: 2rem;
+            font-weight: 300;
+            margin-bottom: 1.5rem;
+            color: #fff;
+        }
+
+        .about-content p, .settings-content p {
+            margin-bottom: 1.5rem;
+            color: #aaa;
+        }
+
+        .settings-option {
+            background: rgba(30, 30, 30, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .settings-option h3 {
+            font-size: 1.3rem;
+            font-weight: 300;
+            margin-bottom: 1rem;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            margin-top: 4rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        /* Mood-specific colors */
+        body.happy { color: #ffd700; }
+        body.happy .gradient-overlay { background: linear-gradient(135deg, #ffd700 0%, #ffed4e 50%, #0e0e0e 100%); }
+
+        body.sad { color: #6b9bd1; }
+        body.sad .gradient-overlay { background: linear-gradient(135deg, #4b6cb7 0%, #182848 50%, #0e0e0e 100%); }
+
+        body.calm { color: #5fbdba; }
+        body.calm .gradient-overlay { background: linear-gradient(135deg, #5fbdba 0%, #3d7e7c 50%, #0e0e0e 100%); }
+
+        body.angry { color: #d64545; }
+        body.angry .gradient-overlay { background: linear-gradient(135deg, #d64545 0%, #8b1e1e 50%, #0e0e0e 100%); }
+
+        body.motivated { color: #00ff88; }
+        body.motivated .gradient-overlay { background: linear-gradient(135deg, #00ff88 0%, #00cc6a 50%, #0e0e0e 100%); }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 2rem; }
+            .mood-grid { grid-template-columns: 1fr; }
+            .quote-text { font-size: 1.3rem; }
+            .button-group { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="gradient-overlay"></div>
+    
+    <header>
+        <h1>MoodMuse</h1>
+        <p class="tagline">Tune Into Your Emotion</p>
+    </header>
+
+    <nav>
+        <button onclick="showPage('home')" class="active">Home</button>
+        <button onclick="showPage('about')">About</button>
+        <button onclick="showPage('settings')">Settings</button>
+    </nav>
+
+    <div class="container">
+        <!-- Home Page -->
+        <div id="home" class="page active">
+            <div class="mood-grid">
+                <div class="mood-card" onclick="selectMood('happy')" style="color: #ffd700;">
+                    <div class="mood-icon">😊</div>
+                    <div class="mood-name">Happy</div>
+                    <div class="mood-description">Bright and joyful vibes</div>
+                </div>
+
+                <div class="mood-card" onclick="selectMood('sad')" style="color: #6b9bd1;">
+                    <div class="mood-icon">😢</div>
+                    <div class="mood-name">Sad</div>
+                    <div class="mood-description">Reflective and melancholic</div>
+                </div>
+
+                <div class="mood-card" onclick="selectMood('calm')" style="color: #5fbdba;">
+                    <div class="mood-icon">😌</div>
+                    <div class="mood-name">Calm</div>
+                    <div class="mood-description">Peaceful and serene</div>
+                </div>
+
+                <div class="mood-card" onclick="selectMood('angry')" style="color: #d64545;">
+                    <div class="mood-icon">😤</div>
+                    <div class="mood-name">Angry</div>
+                    <div class="mood-description">Intense and powerful</div>
+                </div>
+
+                <div class="mood-card" onclick="selectMood('motivated')" style="color: #00ff88;">
+                    <div class="mood-icon">😎</div>
+                    <div class="mood-name">Motivated</div>
+                    <div class="mood-description">Energetic and driven</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mood Display Page -->
+        <div id="mood-display" class="page">
+            <div class="mood-display">
+                <div class="quote-box">
+                    <div class="quote-text" id="quote-text"></div>
+                    <div class="quote-author" id="quote-author"></div>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn" onclick="nextQuote()">Next Quote</button>
+                    <button class="btn" onclick="showPage('home')">Change Mood</button>
+                </div>
+
+                <div class="playlist-section">
+                    <h3>Recommended Playlists</h3>
+                    <div class="playlist-links" id="playlist-links"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- About Page -->
+        <div id="about" class="page">
+            <div class="about-content">
+                <h2>About MoodMuse</h2>
+                <p>MoodMuse is a dark-themed, emotion-driven web application designed to create a calming and immersive digital experience. By selecting your current emotion, the interface adapts with tailored colors, inspiring quotes, and music recommendations that resonate with your mood.</p>
+                
+                <p>Built entirely with HTML, CSS, and JavaScript, MoodMuse demonstrates how simple front-end technologies can create meaningful, emotionally intelligent experiences. The dark theme reduces eye strain and creates a focused environment where mood colors stand out vividly.</p>
+                
+                <p>This project serves as both a tool for digital self-care and a showcase of creative web design. Whether you're seeking motivation, comfort, or simply a moment of reflection, MoodMuse is here to accompany you.</p>
+                
+                <h2 style="margin-top: 3rem;">Technologies Used</h2>
+                <p>• HTML5 for semantic structure<br>
+                • CSS3 for dark-themed styling and animations<br>
+                • JavaScript for interactive mood logic<br>
+                • In-memory storage for user preferences</p>
+            </div>
+        </div>
+
+        <!-- Settings Page -->
+        <div id="settings" class="page">
+            <div class="settings-content">
+                <h2>Settings</h2>
+                
+                <div class="settings-option">
+                    <h3>Theme Variant</h3>
+                    <p>Current theme: Dark Mode (Default)</p>
+                    <div class="button-group">
+                        <button class="btn" onclick="setThemeVariant('default')">Charcoal</button>
+                        <button class="btn" onclick="setThemeVariant('pure')">Pure Black</button>
+                        <button class="btn" onclick="setThemeVariant('dim')">Dim</button>
+                    </div>
+                </div>
+
+                <div class="settings-option">
+                    <h3>Data Management</h3>
+                    <p>Clear your saved mood preferences and start fresh.</p>
+                    <button class="btn" onclick="clearData()">Clear All Data</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>MoodMuse © 2025 | Created with ❤️ for emotional well-being</p>
+    </footer>
+
+    <script>
+        // Quotes database
+        const quotes = {
+            happy: [
+                { text: "Happiness is not by chance, but by choice.", author: "Jim Rohn" },
+                { text: "The sun himself is weak when he first rises, and gathers strength and courage as the day gets on.", author: "Charles Dickens" },
+                { text: "Joy is what happens when we allow ourselves to recognize how good things really are.", author: "Marianne Williamson" },
+                { text: "Happiness is the secret to all beauty. There is no beauty without happiness.", author: "Christian Dior" },
+                { text: "The most wasted of days is one without laughter.", author: "E.E. Cummings" }
+            ],
+            sad: [
+                { text: "Every storm runs out of rain.", author: "Maya Angelou" },
+                { text: "The darker the night, the brighter the stars.", author: "Fyodor Dostoevsky" },
+                { text: "Tears are words that need to be written.", author: "Paulo Coelho" },
+                { text: "Sometimes you need to be alone to reflect on life.", author: "Unknown" },
+                { text: "The cure for anything is salt water: sweat, tears, or the sea.", author: "Isak Dinesen" }
+            ],
+            calm: [
+                { text: "Peace comes from within. Do not seek it without.", author: "Buddha" },
+                { text: "In the midst of movement and chaos, keep stillness inside of you.", author: "Deepak Chopra" },
+                { text: "Calmness is the cradle of power.", author: "Josiah Gilbert Holland" },
+                { text: "The greatest weapon against stress is our ability to choose one thought over another.", author: "William James" },
+                { text: "Within you, there is a stillness and a sanctuary to which you can retreat at any time.", author: "Hermann Hesse" }
+            ],
+            angry: [
+                { text: "For every minute you are angry, you lose sixty seconds of happiness.", author: "Ralph Waldo Emerson" },
+                { text: "Anger is an acid that can do more harm to the vessel in which it is stored than to anything on which it is poured.", author: "Mark Twain" },
+                { text: "Speak when you are angry and you will make the best speech you will ever regret.", author: "Ambrose Bierce" },
+                { text: "The best fighter is never angry.", author: "Lao Tzu" },
+                { text: "Holding onto anger is like drinking poison and expecting the other person to die.", author: "Buddha" }
+            ],
+            motivated: [
+                { text: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
+                { text: "Don't watch the clock; do what it does. Keep going.", author: "Sam Levenson" },
+                { text: "The future belongs to those who believe in the beauty of their dreams.", author: "Eleanor Roosevelt" },
+                { text: "Success is not final, failure is not fatal: it is the courage to continue that counts.", author: "Winston Churchill" },
+                { text: "Believe you can and you're halfway there.", author: "Theodore Roosevelt" }
+            ]
+        };
+
+        // Playlists
+        const playlists = {
+            happy: [
+                { name: "Happy Hits", url: "https://open.spotify.com/playlist/37i9dQZF1DXdPec7aLTmlC" },
+                { name: "Feel Good Music", url: "https://www.youtube.com/watch?v=ZbZSe6N_BXs" }
+            ],
+            sad: [
+                { name: "Sad Songs", url: "https://open.spotify.com/playlist/37i9dQZF1DX7qK8ma5wgG1" },
+                { name: "Melancholic Vibes", url: "https://www.youtube.com/watch?v=4fezP875xOQ" }
+            ],
+            calm: [
+                { name: "Peaceful Piano", url: "https://open.spotify.com/playlist/37i9dQZF1DX4sWSpwq3LiO" },
+                { name: "Calm Meditation", url: "https://www.youtube.com/watch?v=lFcSrYw-ARY" }
+            ],
+            angry: [
+                { name: "Rage Release", url: "https://open.spotify.com/playlist/37i9dQZF1DX1tyCD9QhIWF" },
+                { name: "Heavy Energy", url: "https://www.youtube.com/watch?v=04F4xlWSFh0" }
+            ],
+            motivated: [
+                { name: "Workout Power", url: "https://open.spotify.com/playlist/37i9dQZF1DX76Wlfdnj7AP" },
+                { name: "Motivational Beats", url: "https://www.youtube.com/watch?v=g_tea8ZNk5A" }
+            ]
+        };
+
+        // State
+        let currentMood = null;
+        let currentQuoteIndex = 0;
+        let savedData = {
+            lastMood: null,
+            themeVariant: 'default'
+        };
+
+        // Initialize
+        window.onload = function() {
+            loadSavedData();
+            if (savedData.lastMood) {
+                selectMood(savedData.lastMood);
+            }
+        };
+
+        function loadSavedData() {
+            // Load from memory (simulating localStorage)
+            if (window.moodMuseData) {
+                savedData = window.moodMuseData;
+            }
+        }
+
+        function saveData() {
+            // Save to memory (simulating localStorage)
+            window.moodMuseData = savedData;
+        }
+
+        function showPage(pageName) {
+            const pages = document.querySelectorAll('.page');
+            pages.forEach(page => page.classList.remove('active'));
+            
+            const navButtons = document.querySelectorAll('nav button');
+            navButtons.forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(pageName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function selectMood(mood) {
+            currentMood = mood;
+            currentQuoteIndex = 0;
+            savedData.lastMood = mood;
+            saveData();
+            
+            document.body.className = mood;
+            displayQuote();
+            displayPlaylists();
+            document.getElementById('mood-display').classList.add('active');
+            document.getElementById('home').classList.remove('active');
+        }
+
+        function displayQuote() {
+            const moodQuotes = quotes[currentMood];
+            const quote = moodQuotes[currentQuoteIndex];
+            
+            document.getElementById('quote-text').textContent = `"${quote.text}"`;
+            document.getElementById('quote-author').textContent = `— ${quote.author}`;
+        }
+
+        function nextQuote() {
+            const moodQuotes = quotes[currentMood];
+            currentQuoteIndex = (currentQuoteIndex + 1) % moodQuotes.length;
+            displayQuote();
+        }
+
+        function displayPlaylists() {
+            const moodPlaylists = playlists[currentMood];
+            const container = document.getElementById('playlist-links');
+            container.innerHTML = '';
+            
+            moodPlaylists.forEach(playlist => {
+                const link = document.createElement('a');
+                link.href = playlist.url;
+                link.target = '_blank';
+                link.className = 'playlist-link';
+                link.textContent = playlist.name;
+                container.appendChild(link);
+            });
+        }
+
+        function setThemeVariant(variant) {
+            savedData.themeVariant = variant;
+            saveData();
+            
+            const overlay = document.querySelector('.gradient-overlay');
+            
+            if (variant === 'pure') {
+                document.body.style.background = '#000000';
+            } else if (variant === 'dim') {
+                document.body.style.background = '#1a1a1a';
+            } else {
+                document.body.style.background = '#0e0e0e';
+            }
+            
+            alert(`Theme variant changed to: ${variant}`);
+        }
+
+        function clearData() {
+            savedData = {
+                lastMood: null,
+                themeVariant: 'default'
+            };
+            window.moodMuseData = null;
+            document.body.className = '';
+            alert('All data cleared successfully!');
+        }
+    </script>
+</body>
+</html>
